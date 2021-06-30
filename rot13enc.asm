@@ -74,5 +74,3 @@ _start:
     
 ; insert code between nops
     nop
-
-
