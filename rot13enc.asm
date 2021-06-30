@@ -25,18 +25,29 @@ _start:
 ; insert code between nops
 
 ; Read one byte at a time; yes, I know it's slow, but it's my first attempt at an implementation.
-    Read:   mov rax,0       ; specify x64 sys_read call
+    read:   mov rax,0       ; specify x64 sys_read call
             mov rdi,0       ; specify file descriptor stdin
             mov rsi,buff    ; pass address of buffer to read to
             mov rdx,1       ; tell sys_read to read 1 character from stdin
             syscall         ; call sys_read
 
-            cmp eax,0       ; compare sys_read value to 0
+; test to see if a character falls within the ASCII uppercase range. Either encode it or write it.
+    uptest: cmp rax,0       ; compare sys_read value to 0
             je exit         ; jump to exit if sys_read value == 0 (EOF); if not equal, proceed to next line
-            ; implement tests and conditions to detect if byte [buff] is within the range 41h to 7Ah
-            ; determine whether to add 0Ch or subtract an appropriate offset before encoding
+            cmp byte [buff],41h  ; compare contents of buff to 41h (Uppercase A)
+            jb write        ; if below A, no encoding necessary; jump to write section
+            cmp byte [buff],5ah  ; compare contents of buff to 5ah (uppercase z)
+            ja lotest       ; If above Z, jump to lotest
+            ; determine whether to add 0Ch or subtract some quantity x and perform some operation y.
 
-    ; Write: Implement write functions
+; test to see if a character falls within the ASCII lowercase range. Either encode it or write it.
+    lotest: cmp byte [buff],7ah ; compare contents of buff against 7ah (lowercase z)
+            ja write        ; if above z, no encoding necessary; jump to write section
+            cmp byte [buff],61h ; compare contents of buff to 61h (lowercase a)
+            jb write        ; if below a (and already established above Z), no encoding necessary; jump to write section
+            ; determine whether to add 0Ch or subtract some quantity x and perform some operation y. 
+
+    ; write: Implement write functions
     
     exit:   mov rax,60      ; specify terminate sys_call
             mov rdi,0       ; pass 0 code ("success") to OS
